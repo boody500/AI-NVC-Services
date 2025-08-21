@@ -1,23 +1,51 @@
+# ---------------------------
+# Base image
+# ---------------------------
 FROM python:3.10-slim
 
+# Prevent python from writing pyc files & force stdout/stderr flush
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 # Install system dependencies
-RUN apt-get update && apt-get install -y ffmpeg git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    git \
+    curl \
+    wget \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements and install
+# Copy requirements first for better caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
-# Copy app code
+# Install Python dependencies
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# ---------------------------
+# ✅ Pre-download Hugging Face + Whisper models into the image
+# ---------------------------
+# Preload T5-base
+RUN python -c "from transformers import T5Tokenizer, T5Model; \
+    T5Tokenizer.from_pretrained('t5-base'); \
+    T5Model.from_pretrained('t5-base')"
+
+# Preload Whisper base
+RUN python -c "import whisper; whisper.load_model('base')"
+
+# ---------------------------
+# Copy application files
+# ---------------------------
 COPY . .
 
-# Make startup script executable
+# Ensure startup script is executable
 RUN chmod +x startup.sh
 
-# Expose port (Azure will still override with $PORT)
+# Azure injects PORT, don’t hardcode expose
 EXPOSE 8000
 
-# Run startup script
+# Start with startup script (Gunicorn)
 CMD ["./startup.sh"]
