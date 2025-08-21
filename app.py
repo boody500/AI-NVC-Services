@@ -30,16 +30,21 @@ whisper = None
 
 
 
+# Define cache dir for Hugging Face + Whisper
 CACHE_DIR = "/data/huggingface"
+os.environ["TRANSFORMERS_CACHE"] = CACHE_DIR
+os.environ["HF_HOME"] = CACHE_DIR
+os.environ["TORCH_HOME"] = CACHE_DIR
+os.environ["XDG_CACHE_HOME"] = CACHE_DIR
 
 def load_models():
     global t5_tokenizer, t5_model, whisper_model
     if tokenizer is None or model is None or whisper is None:
         print("Loading T5 model...")
-        t5_tokenizer = T5Tokenizer.from_pretrained("t5-base")
-        t5_model = T5Model.from_pretrained("t5-base")
+        t5_tokenizer = T5Tokenizer.from_pretrained("t5-base",cache_dir=CACHE_DIR)
+        t5_model = T5Model.from_pretrained("t5-base",cache_dir=CACHE_DIR)
         print(f"Loading Whisper on {DEVICE}...")
-        whisper = WhisperModel("base", device=DEVICE, compute_type=WHISPER_COMPUTE_TYPE)
+        whisper = WhisperModel("base", device=DEVICE, compute_type=WHISPER_COMPUTE_TYPE,cache_dir=CACHE_DIR)
         print("Models loaded successfully!")
 
 #def load_models():

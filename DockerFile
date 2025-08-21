@@ -1,51 +1,37 @@
-# ---------------------------
 # Base image
-# ---------------------------
 FROM python:3.10-slim
 
-# Prevent python from writing pyc files & force stdout/stderr flush
+# Prevent Python from writing .pyc files and enable unbuffered logs
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Hugging Face / Whisper cache directory
+ENV TRANSFORMERS_CACHE=/data/huggingface
+ENV HF_HOME=/data/huggingface
+ENV TORCH_HOME=/data/huggingface
+ENV XDG_CACHE_HOME=/data/huggingface
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    git \
-    curl \
-    wget \
-    build-essential \
+    ffmpeg git curl wget build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Create app and cache directories
 WORKDIR /app
+RUN mkdir -p /data/huggingface
 
-# Copy requirements first for better caching
+# Copy requirements and install
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# ---------------------------
-# ✅ Pre-download Hugging Face + Whisper models into the image
-# ---------------------------
-# Preload T5-base
-RUN python -c "from transformers import T5Tokenizer, T5Model; \
-    T5Tokenizer.from_pretrained('t5-base'); \
-    T5Model.from_pretrained('t5-base')"
-
-# Preload Whisper base
-RUN python -c "import whisper; whisper.load_model('base')"
-
-# ---------------------------
-# Copy application files
-# ---------------------------
+# Copy application code
 COPY . .
 
-# Ensure startup script is executable
+# Make startup script executable
 RUN chmod +x startup.sh
 
-# Azure injects PORT, don’t hardcode expose
+# Expose port (Azure expects 8000)
 EXPOSE 8000
 
-# Start with startup script (Gunicorn)
+# Start app
 CMD ["./startup.sh"]
