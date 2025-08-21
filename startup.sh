@@ -1,4 +1,2 @@
 #!/bin/bash
-# Start Flask app with Gunicorn (Azure-compatible)
-exec gunicorn --bind 0.0.0.0:8000 app:app --workers 2 --timeout 600
-
+gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --keep-alive 5 --max-requests 100 app:app

@@ -12,3 +12,4 @@ numpy
 gunicorn
 ffmpeg-python
 sentencepiece
+gunicorn==21.2.0

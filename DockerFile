@@ -1,37 +1,30 @@
-# Base image
-FROM python:3.10-slim
+# Simple Dockerfile for Azure deployment
+FROM python:3.9-slim
 
-# Prevent Python from writing .pyc files and enable unbuffered logs
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Hugging Face / Whisper cache directory
-ENV TRANSFORMERS_CACHE=/data/huggingface
-ENV HF_HOME=/data/huggingface
-ENV TORCH_HOME=/data/huggingface
-ENV XDG_CACHE_HOME=/data/huggingface
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    ffmpeg git curl wget build-essential \
+    ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create app and cache directories
-WORKDIR /app
-RUN mkdir -p /data/huggingface
-
-# Copy requirements and install
+# Copy and install Python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy app and startup script
+COPY app.py .
+COPY startup.sh .
 
 # Make startup script executable
 RUN chmod +x startup.sh
 
-# Expose port (Azure expects 8000)
+# Create temp directory
+RUN mkdir -p videos
+
+# Expose port
 EXPOSE 8000
 
-# Start app
+# Run with startup script
 CMD ["./startup.sh"]
