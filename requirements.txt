@@ -1,0 +1,14 @@
+faster-whisper
+torch
+transformers
+Flask
+flask-cors
+youtube-transcript-api==0.6.2
+scikit-learn
+requests
+yt-dlp
+webvtt-py
+numpy
+gunicorn
+ffmpeg-python
+sentencepiece
