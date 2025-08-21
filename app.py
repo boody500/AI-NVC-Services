@@ -14,6 +14,8 @@ import yt_dlp
 import webvtt
 from faster_whisper import WhisperModel
 
+# Check if running on Azure
+ON_AZURE = os.environ.get('WEBSITE_SITE_NAME') is not None
 # Suppress warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -30,21 +32,15 @@ whisper = None
 
 
 
-# Define cache dir for Hugging Face + Whisper
-CACHE_DIR = "/data/huggingface"
-os.environ["TRANSFORMERS_CACHE"] = CACHE_DIR
-os.environ["HF_HOME"] = CACHE_DIR
-os.environ["TORCH_HOME"] = CACHE_DIR
-os.environ["XDG_CACHE_HOME"] = CACHE_DIR
 
 def load_models():
     global t5_tokenizer, t5_model, whisper_model
     if tokenizer is None or model is None or whisper is None:
         print("Loading T5 model...")
-        t5_tokenizer = T5Tokenizer.from_pretrained("t5-base",cache_dir=CACHE_DIR)
-        t5_model = T5Model.from_pretrained("t5-base",cache_dir=CACHE_DIR)
+        t5_tokenizer = T5Tokenizer.from_pretrained("t5-base",)
+        t5_model = T5Model.from_pretrained("t5-base")
         print(f"Loading Whisper on {DEVICE}...")
-        whisper = WhisperModel("base", device=DEVICE, compute_type=WHISPER_COMPUTE_TYPE,cache_dir=CACHE_DIR)
+        whisper = WhisperModel("base", device=DEVICE, compute_type=WHISPER_COMPUTE_TYPE)
         print("Models loaded successfully!")
 
 #def load_models():
@@ -301,9 +297,10 @@ def compute_video_avg_embeddings(prompt, videos):
     return videos
 
 def ensure_models_loaded():
-    if tokenizer is None or model is None or whisper is None:
+    # On Azure, we want to load models at startup
+    if ON_AZURE:
         load_models()
-
+    # Otherwise, we'll load on first request
 
 # ------------------- ROUTES -------------------
 @app.route("/")
