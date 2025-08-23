@@ -1,30 +1,22 @@
-# Use official Python base image
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-# Prevents Python from writing pyc files & enables stdout logging
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Install system deps (ffmpeg is required for whisper)
+RUN apt-get update && apt-get install -y ffmpeg git && rm -rf /var/lib/apt/lists/*
 
-# Set work directory
+# Create app directory
 WORKDIR /app
 
-# Install system dependencies (for Whisper / Torch / ffmpeg)
-RUN apt-get update && apt-get install -y \
-    git \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements file and install dependencies
+# Copy requirements first (so layers are cached)
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install dependencies (including torch + faster-whisper)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the whole project
+# Copy rest of the app
 COPY . .
 
-# Expose port (Azure uses 8000 by default)
-EXPOSE 8000
+# Expose Flask port
+EXPOSE 5000
 
-# Start Flask app
+# Run your app
 CMD ["python", "app.py"]
