@@ -62,8 +62,6 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_896ED4FD7FA44342ACC9B0C1B26C2B36 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C094AC76D5934813BDB63BA7FC7B1039 }}
 
-      - name: Make startup.sh executable
-        run: chmod +x startup.sh
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3

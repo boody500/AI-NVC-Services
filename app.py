@@ -34,14 +34,15 @@ whisper = None
 
 
 def load_models():
-    global t5_tokenizer, t5_model, whisper_model
+    global tokenizer, model, whisper
     if tokenizer is None or model is None or whisper is None:
         print("Loading T5 model...")
-        t5_tokenizer = T5Tokenizer.from_pretrained("t5-base",)
-        t5_model = T5Model.from_pretrained("t5-base")
+        tokenizer = T5Tokenizer.from_pretrained("t5-base")
+        model = T5Model.from_pretrained("t5-base")
         print(f"Loading Whisper on {DEVICE}...")
         whisper = WhisperModel("base", device=DEVICE, compute_type=WHISPER_COMPUTE_TYPE)
         print("Models loaded successfully!")
+
 
 #def load_models():
  #   global tokenizer, model, whisper
@@ -297,19 +298,26 @@ def compute_video_avg_embeddings(prompt, videos):
     return videos
 
 def ensure_models_loaded():
-    # On Azure, we want to load models at startup
-    if ON_AZURE:
+    global tokenizer, model, whisper
+
+    if tokenizer is None or model is None or whisper is None:
         load_models()
-    # Otherwise, we'll load on first request
+
 
 # ------------------- ROUTES -------------------
 @app.route("/")
 def home():
     return jsonify({"message": "YouTube Transcript Analysis API is running!", "version": "1.0.0"})
 
-@app.route("/health", methods=["GET"])
-def health_check():
-    return jsonify({"status": "ok"}), 200
+
+# Add health check endpoint for containers
+@app.route("/container-health", methods=["GET"])
+def container_health_check():
+    return jsonify({
+        "status": "healthy", 
+        "environment": "container",
+        "device": DEVICE
+    }), 200
 
 @app.route("/GetTranscript", methods=["GET"])
 def get_transcript():
@@ -400,9 +408,10 @@ def predict():
 #   port = int(os.environ.get("PORT", 7860))  # Azure uses dynamic port
 #  app.run(host="0.0.0.0", port=port, debug=False)
 if __name__ == "__main__":
-    ensure_models_loaded()  # preload T5 + Whisper
-    port = int(os.environ.get("PORT", 8000))  # Azure sets $PORT dynamically
+    # ensure_models_loaded()   # ❌ slow, removed
+    port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port, debug=False)
+
 
 
 

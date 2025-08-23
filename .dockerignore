@@ -1,0 +1,38 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+
+# Ignore virtual environments
+venv/
+env/
+.venv/
+
+# Ignore build & cache
+*.log
+*.sqlite3
+*.db
+*.DS_Store
+*.egg-info/
+.eggs/
+.cache/
+.mypy_cache/
+.pytest_cache/
+pip-wheel-metadata/
+
+# Ignore git & docker files
+.git/
+.gitignore
+Dockerfile
+.dockerignore
+
+# Ignore local data & models (only pull inside container if needed)
+*.mp4
+*.wav
+*.mp3
+*.json
+data/
+datasets/
+models/
