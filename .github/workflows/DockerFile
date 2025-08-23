@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM pytorch/pytorch:2.3.0-cpu
 
 # Avoids interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -11,8 +11,10 @@ RUN apt-get update && apt-get install -y \
 # Create app dir
 WORKDIR /app
 
-# Install Python deps first (cached layer)
+# Copy only requirements first
 COPY requirements.txt .
+
+# Install dependencies (torch already installed in base image)
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app code
@@ -21,5 +23,5 @@ COPY . .
 # Expose Flask port
 EXPOSE 8000
 
-# Run your app (change app:app to your WSGI entrypoint)
+# Run your app
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app"]
