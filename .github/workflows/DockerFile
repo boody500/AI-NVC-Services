@@ -1,0 +1,25 @@
+FROM python:3.10-slim
+
+# Avoids interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    ffmpeg git build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app dir
+WORKDIR /app
+
+# Install Python deps first (cached layer)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy app code
+COPY . .
+
+# Expose Flask port
+EXPOSE 8000
+
+# Run your app (change app:app to your WSGI entrypoint)
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app"]
