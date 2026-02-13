@@ -1,0 +1,16 @@
+1
+00:00:00,050 --> 00:00:04,700
+The next wave of CNN research focuses on efficiency and hybridization.
+
+2
+00:00:04,700 --> 00:00:08,612
+Neural Architecture Search automates design of optimal networks.
+
+3
+00:00:08,612 --> 00:00:13,775
+Combining CNNs with transformers brings global context to local feature extraction.
+
+4
+00:00:13,775 --> 00:00:22,137
+Edge‑optimized CNNs enable real‑time inference on smartphones and IoT devices, expanding AI to the farthest corners of our lives.
+

@@ -10,7 +10,7 @@ import json
 from AI_services import ensure_models_loaded, fetch_transcript, download_captions
 
 from openAI import generate_story_AI, highlight_pdf
-from tasks import run_video_prediction
+from tasks import run_video_prediction,lip_sync
 from clients import firebase_creds
 from celery.result import AsyncResult
 from tasks import celery  # wherever you defined Celery
@@ -28,6 +28,12 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 #  Initialize Firebase Admin
 cred = credentials.Certificate(firebase_creds)
 firebase_admin.initialize_app(cred)
+
+#for audio upload
+UPLOAD_DIR = os.path.join(os.getcwd(), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+from werkzeug.utils import secure_filename
+import uuid
 
 
 # ------------------- GPU/CPU FALLBACK -------------------
@@ -213,26 +219,33 @@ def get_status():
         return jsonify({"state": task.state}), 200
 
 
-"""
+
 @app.route("/avatar", methods=["POST"])
 def avatar():
-
-    data = request.get_json()
-    pic = data.get('pic')
-    summary = data.get('summary')
-    voice_name = data.get('voice_name')
-
-    if not pic or not voice_name:
-        return jsonify({"error": "pic and voice_name are required"}), 404
-
-    if summary == "":
-        return jsonify({"error": "cannot generate avatar"}), 404
-
-    task = lip_sync.apply_async(args=[pic,summary,voice_name])
+    if request.content_type and "multipart/form-data" in request.content_type:
+        pic = request.form.get("pic")
+        summary = request.form.get("summary")
+        audio_file = request.files.get("audio")
 
 
-    return jsonify({"task_id": task.id}), 202
-"""
+        audio_path = os.path.join(UPLOAD_DIR, audio_file.filename)
+        audio_file.save(audio_path)
+
+        task = lip_sync.apply_async(args=[pic,  summary,"",audio_path])
+
+    else:
+        data = request.get_json()
+        pic = data.get("pic")
+        summary = data.get("summary")
+        voice_name = data.get("voice_name")
+
+        task = lip_sync.apply_async(args=[pic,summary,voice_name,""])
+
+
+
+
+    return jsonify({"taskId": task.id}), 202
+
 
 
 @app.route("/generate-story", methods=["POST"])
@@ -257,6 +270,40 @@ def handle_pdf():
     return jsonify(json.loads(content)), 200
 
 
+@app.route("/ads",methods=["GET"])
+def ads():
+    text_data = request.args.get("text")
+    n_seconds = float(request.args.get("n_seconds"))
+    payload = {
+        "resolution": "full-hd",
+        "quality": "high",
+        "scenes": [
+            {
+                "background-color": "#4392F1",
+                "elements": [
+                    {
+                        "type": "text",
+                        "text": text_data,
+                        "duration": n_seconds
+                    }
+                ]
+            }
+        ]
+    }
+    response = requests.post("https://api.json2video.com/v2/movies",headers={"x-api-key":"wmenmh7E4lDMAj7cec35ZFeduBA1w1RPEdQ7Thei","Content-Type":"application/json"},data=json.dumps(payload))
+    if response.status_code != 200:
+        return jsonify({"error": str(response.status_code)}), 500
+
+    project_id = response.json().get('project')
+    print(project_id)
+    ad_data = requests.get(f"https://api.json2video.com/v2/movies?peoject{project_id}",headers={"x-api-key":"wmenmh7E4lDMAj7cec35ZFeduBA1w1RPEdQ7Thei"})
+    while (ad_data.json())['movies'][0]['status'] == "running" or ad_data.json()['movies'][0]['status'] == "pending":
+        ad_data = requests.get(f"https://api.json2video.com/v2/movies?peoject{project_id}",
+                               headers={"x-api-key": "wmenmh7E4lDMAj7cec35ZFeduBA1w1RPEdQ7Thei"})
+
+    data = ad_data.json()
+    print(data)
+    return {"url":data['movies'][0]['url'],"id":project_id,"duration":n_seconds}, 200
 """
 @app.route("/AI-video-generation",methods=["POST"])
 def AI_generate_video():
@@ -295,7 +342,7 @@ def AI_generate_video_status():
 if __name__ == "__main__":
     # ensure_models_loaded()   # ❌ slow, removed
     # port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=7000)
 
 
 

@@ -21,11 +21,33 @@ def generate_story_AI(data):
 
 
     else:
-        system_text = "i will give you a full content extracted from a pdf or a simple text, this content should be talking about some topics. " \
-                      "i want you to act as a creator and take this pdf content or this text and to split it into scenes and to give each scene a title that will give a good results if i entered it on youtube search engine. " \
-                      "i want you to make scenes contant related to each other as it will be narated using avatar. " \
-                      "i want you for each scene to generate a content that describe it as it will be givin for AI video generation tool like sora,google veo." \
-                      "i want you to return the scenes content and titles in json format like this({\"scenes\":[{\"content\" : \"scene content\",\"title\" : \"scene title\",\"AI_video_describtion\":\"AI video describtion\"}]}) and with the same language as the pdf content is and i will give you the pdf content in json format. max 5 scenes"
+        system_text = (
+            "You will receive full content extracted from a PDF or a plain text, provided in JSON format. "
+            "The content discusses one or more related topics. "
+
+            "Your task is to transform this content into a short, coherent video script divided into scenes.\n\n"
+
+            "Requirements:\n"
+            "- Split the content into a maximum of 5 scenes.\n"
+            "- Each scene must:\n"
+            "  - Represent a clear idea or topic from the content.\n"
+            "  - Have a title optimized for YouTube search.\n"
+            "  - Contain narration text suitable for an AI avatar.\n"
+            "  - Include a visual description suitable for AI video generation tools (e.g., Sora, Google Veo).\n"
+            "- Scenes must be logically connected and flow naturally as a narrated story.\n"
+            "- Use the same language as the input content.\n\n"
+
+            "Return the output strictly in the following JSON format:\n"
+            "{"
+            "\"scenes\": ["
+            "{"
+            "\"title\": \"YouTube-optimized scene title\", "
+            "\"content\": \"Narration content for the avatar\", "
+            "\"AI_video_describtion\": \"Visual description for AI video generation\""
+            "}"
+            "]"
+            "}"
+        )
 
     completion = openAI_client.chat.completions.create(
         model="OpenAI GPT-oss-120b",
@@ -40,7 +62,7 @@ def generate_story_AI(data):
                 "content": user_content,
             }
         ],
-        max_tokens=10000
+        max_tokens=12000
     )
     return completion.choices[0].message.content
 
@@ -62,7 +84,7 @@ def highlight_pdf(pdf_file):
         messages=[
             {
                 "role": "system",
-                "content": "you will be givin a pdf talking about some topic, i want you without summrizing the pdf content to just make the content readable as a document with the same language it's given, return json as this{\"content\":\"document_content\"}. again and again don't summarize the pdf and keep the explinations of the topics as it is if available.make the document content human readable"
+                "content": "You will receive full content extracted from a PDF, written in a specific language. Your task is NOT to summarize, shorten, or rewrite the ideas.\n\nRewrite the content only to improve readability and structure while preserving all original information, explanations, and level of detail exactly as provided.\n\nRequirements:\n- Do NOT summarize, compress, or remove any information.\n- Do NOT add new information or interpretations.\n- Keep all topic explanations exactly as they appear, if available.\n- Improve readability by fixing grammar, spacing, punctuation, and flow.\n- Preserve the original language of the input content.\n- The final output should read like a clean, human-readable document.\n\nReturn the output strictly in the following JSON format:\n{\"content\": \"document_content\"}\n\nDo not include any text outside the JSON response."
 
             },
             {
@@ -70,7 +92,7 @@ def highlight_pdf(pdf_file):
                 "content": text,
             }
         ],
-        max_tokens=10000
+        max_tokens=12000
     )
     return completion.choices[0].message.content
 
@@ -89,7 +111,7 @@ def adjust_transcript(transcript):
 
                 "role": "system",
 
-                "content": "you will be givin a list contains video transcript includes captions with time stamps i want you to merge the related captions with each other to form a chunk with start and end time max 100 token caption per chunk and to keep the video sequance in consideration and try to always end the chunk with the most appropirate ending in the captions. return only a json with the new chunks like this {\"transcript\":[{\"text\":\"merged caption\",\"start\":\"start time\",\"end\":\"end time\"}]} don't add any extra discriptions just return the json format. "
+                "content": "You will receive a list representing a video transcript. Each item contains caption text with start and end timestamps.\n\nYour task is to merge related and consecutive captions into coherent chunks while preserving the original video sequence.\n\nRequirements:\n- Merge only captions that are contextually related and consecutive in time.\n- Each chunk must contain a maximum of 100 tokens.\n- Preserve chronological order exactly as in the original transcript.\n- Each chunk must have:\n  - \"text\": the merged caption text\n  - \"start\": the start time of the first caption in the chunk\n  - \"end\": the end time of the last caption in the chunk\n- Always try to end each chunk at a natural or meaningful stopping point in the captions (e.g., sentence end, idea completion).\n- Do NOT skip, reorder, summarize, or rewrite caption content.\n- Do NOT add any new text or interpretation.\n\nReturn the output strictly in the following JSON format:\n{\"transcript\":[{\"text\":\"merged caption\",\"start\":\"start time\",\"end\":\"end time\"}]}\n\nDo not include any explanations, comments, or text outside the JSON response."
 
             },
 
@@ -103,7 +125,7 @@ def adjust_transcript(transcript):
 
         ],
 
-        max_tokens=10000
+        max_tokens=12000
 
     )
 

@@ -1,11 +1,10 @@
 faster-whisper
-torch==2.6.0+cpu 
-torchaudio==2.6.0+cpu 
+torch==2.6.0+cpu
+torchaudio==2.6.0+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
 transformers
 Flask
 flask-cors
-#youtube-transcript-api==0.6.2
 scikit-learn
 requests
 yt-dlp[default]>=2025.11.12
@@ -20,7 +19,9 @@ redis
 gradio_client
 openai
 cloudinary
-langdetect 
+langdetect
 PyPDF2
 timeout-decorator
 playwright
+ytws
+edge-tts

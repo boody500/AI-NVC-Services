@@ -29,7 +29,8 @@ from gradio_client import Client, file
 
 import datetime
 
-# tts_client = Client("bestoai/text-to-video")
+#tts_client = Client("bestoai/text-to-video")
+#tts_client = Client("MohamedRashad/Multilingual-TTS")
 wav2lip_client = Client("pragnakalp/Wav2lip-ZeroGPU")
 
 
@@ -293,9 +294,9 @@ def fetch_transcript(video_id, max_retries=3, initial_delay=1):
 
     if response.status_code == 200:
         data = response.json()
+        print(data)
         print("transcript fetched successfully!")
-        return [{"text": s['text'], "start": s['start'], "end": s['start'] + s['duration']} for s in
-                data['transcripts']]
+        return [{"text": s['text'], "start": s['start'], "end": s['start'] + s['duration']} for s in data['transcripts']]
     else:
         print(f"Request failed with status code: {response.status_code}")
         return False
@@ -322,15 +323,12 @@ def best_video_clip(video_id, prompt, headings, access_token, merge):
     print("begin of best_video_clip function ", datetime.datetime.now())
     """Find the best video clip segment for a given prompt."""
     transcript = fetch_transcript(video_id)
-    whisper_try = False
     if not transcript:
         print("try to run whisper")
         transcript = download_captions(video_id, access_token)
         if not transcript:
-            return {"error": "Transcript not available"}
-        else:
-            whisper_try = True
-            print("whisper done!")
+            return {"error": "Transcript not available","best_start":0, "best_end":0}
+
     if merge:
         adjusted_raw = adjust_transcript(transcript)
         try:
@@ -343,11 +341,11 @@ def best_video_clip(video_id, prompt, headings, access_token, merge):
                 print(transcript)
             else:
                 print(f"Unexpected format from adjust_transcript: {data}")
-                return {"error": "Invalid transcript format after merge"}
+                return {"error": "Invalid transcript format after merge","best_start":0, "best_end":0}
 
         except json.JSONDecodeError:
             print(f"adjust_transcript did not return valid JSON. It returned: {adjusted_raw}")
-            return {"error": "Failed to parse merged transcript"}
+            return {"error": "Failed to parse merged transcript","best_start":0, "best_end":0}
 
     documents = [caption["text"] for caption in transcript]
     starts = np.array([caption["start"] for caption in transcript])
@@ -362,7 +360,7 @@ def best_video_clip(video_id, prompt, headings, access_token, merge):
     result = find_best_segment_sequence(similarities, starts, ends, threshold=similarity_threshold)
 
     if result is None:
-        return {"error": "No suitable segment found"}
+        return {"error": "No suitable segment found","best_start":0, "best_end":0}
 
     segment_indices, start_time, end_time = result
 
@@ -424,19 +422,31 @@ def compute_video_avg_embeddings(prompt, videos):
 
     return videos
 
-
 """
 def tts(voice_name, summary):
     result = tts_client.predict(
         text=summary,
-        voice=voice_name,
-        rate=0,
-        pitch=0,
-        num_lines=2,
-        api_name="/tts_interface"
+        language_code="English",
+        speaker="Ryan",
+        api_name="/text_to_speech_edge"
     )
     print("TTS result:", result)
     return result
-
 """
 
+
+def tts(voice_name, summary):
+    try:
+        command = [
+            'edge-tts',
+            '--voice',voice_name,
+            '--text',summary,
+            '--write-media','file.mp3',
+            '--write-subtitles','subtitle.srt'
+        ]
+        subprocess.run(command,check=True)
+
+        return os.path.abspath("file.mp3")
+
+    except:
+        print("TTS command failed")
