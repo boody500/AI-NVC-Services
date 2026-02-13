@@ -32,7 +32,7 @@ import datetime
 #tts_client = Client("bestoai/text-to-video")
 #tts_client = Client("MohamedRashad/Multilingual-TTS")
 hf_token = os.getenv("hf_token")
-wav2lip_client = Client("pragnakalp/Wav2lip-ZeroGPU",hf_token=hf_token)
+wav2lip_client = Client("pragnakalp/Wav2lip-ZeroGPU",token=hf_token)
 
 
 def load_models():
