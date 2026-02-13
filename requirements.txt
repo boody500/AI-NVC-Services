@@ -1,15 +1,26 @@
 faster-whisper
-torch==2.2.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+torch==2.6.0+cpu 
+torchaudio==2.6.0+cpu 
+--extra-index-url https://download.pytorch.org/whl/cpu
 transformers
 Flask
 flask-cors
-youtube-transcript-api==0.6.2
+#youtube-transcript-api==0.6.2
 scikit-learn
 requests
-yt-dlp
+yt-dlp[default]>=2025.11.12
 webvtt-py
 numpy
 gunicorn
 ffmpeg-python
 sentencepiece
-gunicorn==21.2.0
+firebase_admin
+celery[redis]
+redis
+gradio_client
+openai
+cloudinary
+langdetect 
+PyPDF2
+timeout-decorator
+playwright
