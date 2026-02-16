@@ -62,7 +62,7 @@ def generate_story_AI(data):
                 "content": user_content,
             }
         ],
-        max_tokens=12000
+        max_tokens=20000
     )
     return completion.choices[0].message.content
 
@@ -92,7 +92,7 @@ def highlight_pdf(pdf_file):
                 "content": text,
             }
         ],
-        max_tokens=12000
+        max_tokens=20000
     )
     return completion.choices[0].message.content
 
@@ -125,7 +125,7 @@ def adjust_transcript(transcript):
 
         ],
 
-        max_tokens=12000
+        max_tokens=20000
 
     )
 
